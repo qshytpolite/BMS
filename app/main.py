@@ -1,14 +1,19 @@
 # Define the main application and endpoints.
 
-from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
+from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, APIRouter
 from sqlalchemy.orm import Session
 from . import models, schemas, crud, database
 from typing import List
 from fastapi.security import OAuth2PasswordRequestForm
 from .auth import authenticate_user, create_access_token, get_current_user
+from .database import get_db
+from .models import Expense
 from PIL import Image
 import pytesseract
 from typing import List
+from collections import defaultdict
+
+router = APIRouter()
 
 
 app = FastAPI()
@@ -82,3 +87,24 @@ def upload_receipt(file: UploadFile, current_user: models.User = Depends(get_cur
     text = pytesseract.image_to_string(image)
     # Basic parsing to extract data (improve with NLP if needed)
     return {"extracted_text": text}
+
+# Add Expense analytics endpoints to provide data for visualization
+
+
+@router.get("/analytics/expenses")
+def get_expense_analytics(db: Session = Depends(get_db)):
+    # """Returns aggregated expense data for visualization."""
+    # expenses = db.query(Expense).all()
+
+    # Aggregate data
+    analytics = {}
+    for expense in db.query(Expense).all():
+        if expense.category in analytics:
+            analytics[expense.category] += expense.amount
+        else:
+            analytics[expense.category] = expense.amount
+
+    # Format for frontend
+    formatted_data = [{"category": key, "amount": value}
+                      for key, value in analytics.items()]
+    return {"data": formatted_data}
