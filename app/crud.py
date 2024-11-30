@@ -36,18 +36,27 @@ def get_expenses_by_user(db: Session, user_id: int):
 
 
 def calculate_expense_trend(db: Session, user_id: int):
+    # Fetch all expenses for the user
     expenses = db.query(models.Expense).filter(
-        models.Expense.user_id == user_id).all()
+        models.Expense.user_id == user_id
+    ).all()
+
     if not expenses:
         return {"message": "No expenses to analyze"}
 
-    amounts = [expense.amount for expense in expenses]
+    # Extract expense amounts and categories
+    amounts = [expense.amount for expense in expenses if isinstance(
+        expense.amount, (int, float))]
     categories = [expense.category for expense in expenses]
 
-    # Trend analysis (simple example: total and average expenses)
+    # Handle empty amounts
+    if not amounts:
+        return {"message": "No valid expense amounts to analyze"}
+
+    # Trend analysis
     total_expenses = sum(amounts)
-    average_expense = np.mean(amounts)
-    category_breakdown = {category: amounts.count(
+    average_expense = np.mean(amounts)  # Now safe since amounts are numeric
+    category_breakdown = {category: categories.count(
         category) for category in set(categories)}
 
     return {
