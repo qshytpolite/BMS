@@ -31,3 +31,12 @@ class ExpenseResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+# Token Data
+
+
+class TokenData(BaseModel):
+    user_id: int
+
+    class Config:
+        orm_mode = True
